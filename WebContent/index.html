@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html ng-app="app">
+<head>
+<meta charset="UTF-8">
+<title>Tennis</title>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+	var app = angular.module('app', []);
+	
+	app.controller('mainController', function($scope, $http) {
+		$scope.width = 600;
+		$scope.height = 1200;
+		$scope.gameState = null;
+		$scope.fps = 50;
+		
+		courtHeight = 780;
+		courtWidth = 270;
+		
+		$scope.qVsFrame = {
+				x: [],
+				y: []
+		}
+		
+		$scope.tdeVsFrame = {
+				x: [],
+				y: []
+		}
+		
+		$scope.rlVsFrame = {
+				x: [],
+				y: []
+		}
+		
+		$scope.avEdrVsFrame = {
+				x: [],
+				y: []
+		}
+		
+		$scope.trVsFrame = {
+				x: [],
+				y: []
+		}
+		
+		$scope.gameFps = {
+				x: [],
+				y: [],
+		}
+		
+		$scope.simulationFps = {
+				x: [],
+				y: []
+		}
+		
+		$scope.updateGraph = function() {
+			$scope.qVsFrame.x.push($scope.gameState.frameNumber);
+			$scope.qVsFrame.y.push($scope.gameState.player1.q);
+			Plotly.newPlot(qVsFrame, [$scope.qVsFrame], {margin: {t:0}});
+			
+			$scope.tdeVsFrame.x.push($scope.gameState.frameNumber);
+			$scope.tdeVsFrame.y.push($scope.gameState.averageTDError);
+			Plotly.newPlot(tdeVsFrame, [$scope.tdeVsFrame], {margin: {t:0}});
+			
+			$scope.rlVsFrame.x.push($scope.gameState.frameNumber);
+			$scope.rlVsFrame.y.push($scope.gameState.averageRallyLength);
+			Plotly.newPlot(rlVsFrame, [$scope.rlVsFrame], {margin: {t:0}});
+			
+			$scope.avEdrVsFrame.x.push($scope.gameState.frameNumber);
+			$scope.avEdrVsFrame.y.push($scope.gameState.averageEpisodeDiscountedReturn);
+			Plotly.newPlot(avEdrVsFrame, [$scope.avEdrVsFrame], {margin: {t:0}});
+			
+			$scope.trVsFrame.x.push($scope.gameState.frameNumber);
+			$scope.trVsFrame.y.push($scope.gameState.totalReward);
+			Plotly.newPlot(trVsFrame, [$scope.trVsFrame], {margin: {t:0}});
+			
+			$scope.gameFps.x.push($scope.gameState.frameNumber);
+			$scope.simulationFps.x.push($scope.gameState.frameNumber);
+			$scope.gameFps.y.push(1);
+			$scope.simulationFps.y.push($scope.gameState.simulationFps/$scope.gameState.gameFps);
+			Plotly.newPlot(fpsRatio, [$scope.simulationFps], {margin: {t:0}});
+			Plotly.plot(fpsRatio, [$scope.gameFps], {margin: {t:0}});
+		}
+		
+		$scope.refresh = function() {
+			var address = 'GameState';
+			$http.get(address, null).then(function(response) {
+				$scope.gameState = response.data;
+				
+				var c = document.getElementById("myCanvas");
+				var ctx = c.getContext("2d");
+				ctx.fillStyle = "#EEEEEE";
+				ctx.fillRect(0,0,$scope.width,$scope.height);
+				ctx.fillStyle = "#8888FF";
+				ctx.fillRect($scope.width/2 - courtWidth/2, $scope.height/2 - courtHeight/2, courtWidth, courtHeight);
+				//ctx.fillRect(0, 0, courtWidth, courtHeight);
+				
+				ctx.moveTo($scope.width/2 - courtWidth/2, $scope.height/2);
+				ctx.lineTo($scope.width/2 + courtWidth/2, $scope.height/2);
+				ctx.stroke();
+				
+				ctx.fillStyle = "#00FF00";
+				ctx.beginPath();
+				ctx.arc($scope.width/2 - courtWidth/2 + $scope.gameState.ball.x*10,
+						$scope.height/2 + courtHeight/2 - $scope.gameState.ball.y*10,
+						2 + $scope.gameState.ball.z/5,0,2*Math.PI);
+				ctx.fill();
+				
+				ctx.fillStyle = "#FF0000";
+				ctx.beginPath();
+				ctx.fillRect($scope.width/2 - courtWidth/2 + $scope.gameState.player1.x*10 - 20,
+						$scope.height/2 + courtHeight/2 - $scope.gameState.player1.y*10 - 5,
+						40,10);
+				ctx.fill();
+				
+				ctx.fillStyle = "#FFFF00";
+				ctx.beginPath();
+				ctx.fillRect($scope.width/2 - courtWidth/2 + $scope.gameState.player2.x*10 - 20,
+						$scope.height/2 + courtHeight/2 - $scope.gameState.player2.y*10 - 5,
+						40,10);
+				ctx.fill();
+				
+			});
+		}
+		
+		setInterval($scope.updateGraph, 2 * 1000);
+		setInterval($scope.refresh, 1000/$scope.fps);
+	});
+</script>
+
+</head>
+<body ng-controller="mainController">
+
+	<canvas id="myCanvas" width="{{width}}" height="{{height}}"></canvas>
+	
+	<br />
+	
+	<p>Frame Number: {{gameState.frameNumber}}</p>
+	<p>FPS: {{gameState.gameFps}}</p>
+	<p>Game Time: {{gameState.gameTime}}</p>
+	<p>Simulation FPS: {{gameState.simulationFps}}</p>
+	<p>Actual Time: {{gameState.actualTime}}</p>
+	<br />
+	<p>Average Q: {{gameState.player1.q}}</p>
+	<p>Exploration: {{gameState.player1.explore}}</p>
+	<br />
+	
+	Q:
+	<div id="qVsFrame" style="width:1000px;height:500px"></div>
+	Average TD Error:
+	<div id="tdeVsFrame" style="width:1000px;height:500px"></div>
+	Rally Length:
+	<div id="rlVsFrame" style="width:1000px;height:500px"></div>
+	Average Episode Discounted Return:
+	<div id="avEdrVsFrame" style="width:1000px;height:500px"></div>
+	Total Reward:
+	<div id="trVsFrame" style="width:1000px;height:500px"></div>
+	FPS Ratio:
+	<div id="fpsRatio" style="width:1000px;height:500px"></div>
+	
+</body>
+</html>
