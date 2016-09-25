@@ -7,5 +7,7 @@ public class EligibleStateActionPair {
 	public State state;
 	public Action action;
 	public double eligibility;
+	public double initiallyPredictedReturn;
 	public double targetReturn;
+	public double error;
 }

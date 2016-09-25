@@ -88,7 +88,7 @@ public class DQNAgent extends BaseReinforcementLearner {
 			double[] inputTuple = state.getTuple();
 			double[] targetTuple = Q.getOutput(inputTuple);
 			double tdError = qValue - targetTuple[e.actionId];
-			averageTDError += 0.5 * (Math.abs(tdError) - averageTDError);
+			averageTDError += 0.5 * (tdError - averageTDError);
 			targetTuple[e.actionId] = qValue;
 			
 			trainingInputs[i] = inputTuple;

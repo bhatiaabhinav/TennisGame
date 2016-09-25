@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html ng-app="app">
+<head>
+<meta charset="UTF-8">
+<title>Tennis</title>
+<script src="angular.min.js"></script>
+<script src="plotly-latest.min.js"></script>
+<script>
+	var app = angular.module('app', []);
+	
+	app.controller('mainController', function($scope, $http) {
+		$scope.gameState = null;
+		$scope.fps = 10;
+		$scope.lastFrameNumber = 0;
+		var address = 'GeneralAI';
+		
+		$scope.qVsFrame = {
+				x: [],
+				y: []
+		}
+		
+		$scope.tdeVsFrame = {
+				x: [],
+				y: []
+		}
+		
+		$scope.avEdrVsFrame = {
+				x: [],
+				y: []
+		}
+		
+		$scope.trVsFrame = {
+				x: [],
+				y: []
+		}
+		
+		$scope.updateGraph = function() {
+			if ($scope.lastFrameNumber != $scope.gameState.frameNumber) {
+				
+				$scope.lastFrameNumber = $scope.gameState.frameNumber;
+				
+				$scope.qVsFrame.x.push($scope.gameState.frameNumber);
+				$scope.qVsFrame.y.push($scope.gameState.q);
+				Plotly.newPlot(qVsFrame, [$scope.qVsFrame], {margin: {t:0}});
+				
+				$scope.tdeVsFrame.x.push($scope.gameState.frameNumber);
+				$scope.tdeVsFrame.y.push($scope.gameState.averageTDError);
+				Plotly.newPlot(tdeVsFrame, [$scope.tdeVsFrame], {margin: {t:0}});
+				
+				$scope.avEdrVsFrame.x.push($scope.gameState.frameNumber);
+				$scope.avEdrVsFrame.y.push($scope.gameState.averageEpisodeDiscountedReturn);
+				Plotly.newPlot(avEdrVsFrame, [$scope.avEdrVsFrame], {margin: {t:0}});
+				
+				$scope.trVsFrame.x.push($scope.gameState.frameNumber);
+				$scope.trVsFrame.y.push($scope.gameState.totalReward);
+				Plotly.newPlot(trVsFrame, [$scope.trVsFrame], {margin: {t:0}});
+			}
+		}
+		
+		$scope.refresh = function() {
+			$http.get(address, null).then(function(response) {
+				$scope.gameState = response.data;
+			});
+		}
+		
+		setInterval($scope.updateGraph, 2 * 1000);
+		setInterval($scope.refresh, 1000/$scope.fps);
+		
+		$scope.submit = function() {
+			$http.post(address + "?" + $scope.settingKey + "=" + $scope.settingValue, null, null).then(function(response) {
+				alert("done");
+			});
+		}
+	});
+</script>
+
+</head>
+<body ng-controller="mainController">
+
+	<form ng-submit="submit()">
+		<input type="text" placeholder="key" ng-model="settingKey" />
+		<input type="text" placeholder="value" ng-model="settingValue" />
+		<input type="submit" value="change setting"/>
+	</form>
+
+	<p>Received: {{gameState.lastReceivedMsg}}</p>
+	<p>Sent: {{gameState.lastSentMsg}}</p>
+	
+	<br />
+	
+	<p>Frame Number: {{gameState.frameNumber}}</p>
+	<br />
+	<p>Average Q: {{gameState.q}}</p>
+	<p>Exploration: {{gameState.explore}}</p>
+	<br />
+	
+	Q:
+	<div id="qVsFrame" style="width:1000px;height:500px"></div>
+	Average TD Error:
+	<div id="tdeVsFrame" style="width:1000px;height:500px"></div>
+	Average Episode Discounted Return:
+	<div id="avEdrVsFrame" style="width:1000px;height:500px"></div>
+	Total Reward:
+	<div id="trVsFrame" style="width:1000px;height:500px"></div>
+	
+</body>
+</html>

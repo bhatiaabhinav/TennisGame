@@ -13,7 +13,7 @@ import org.json.JSONObject;
 /**
  * Servlet implementation class UiServlet
  */
-@WebServlet("/GameState")
+@WebServlet("/TennisGame")
 public class UiServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
@@ -54,8 +54,8 @@ public class UiServlet extends HttpServlet {
 		JSONObject player2 = new JSONObject();
 		player2.put("x", g.player2.x);
 		player2.put("y", g.player2.y);
-		player2.put("q", ((AIPlayer)g.player2).ai.agent.getAverageValue());
-		player2.put("explore", ((AIPlayer)g.player2).ai.agent.getExplorationProbability());
+		//player2.put("q", ((AIPlayer)g.player2).ai.agent.getAverageValue());
+		//player2.put("explore", ((AIPlayer)g.player2).ai.agent.getExplorationProbability());
 		obj.put("player2", player2);
 		
 		JSONObject ball = new JSONObject();

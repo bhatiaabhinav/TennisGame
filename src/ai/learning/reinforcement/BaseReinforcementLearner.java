@@ -47,13 +47,13 @@ public abstract class BaseReinforcementLearner implements ReinforcementLearner {
 		episodeFrameIndex = 0;
 		episodeDiscountedReturn = 0;
 		currentState = episodeStartState;
-	}
+	}	
 	
 	protected abstract ChosenAction act();
 
 	@Override
 	public final void endFrame(State nextState, double reward) {
-		episodeDiscountedReturn += Math.pow(getDiscountFactor(), episodeIndex) * reward;
+		episodeDiscountedReturn += Math.pow(getDiscountFactor(), episodeFrameIndex) * reward;
 		totalReward += reward;
 		frameIndex++;
 		episodeFrameIndex++;

@@ -10,15 +10,15 @@ public class TennisAI {
 		
 		HyperParameters params = new HyperParameters();
 		params.finalExplorationFrame = 300000;
-		params.discountFactor = 1;
+		//params.discountFactor = 1;
 		params.replayMemorySize = 100000;
 		
 		firstAction = true;
 		
-//		agent = new DQNAgent(params, TennisState.STATE_VECTOR_LENGTH,
-//				TennisAction.POSSIBLE_ACTIONS);
-		agent = new DTdLambdaNAgent(params, TennisState.STATE_VECTOR_LENGTH,
+		agent = new DQNAgent(params, TennisState.STATE_VECTOR_LENGTH,
 				TennisAction.POSSIBLE_ACTIONS);
+//		agent = new DTdLambdaNAgent(params, TennisState.STATE_VECTOR_LENGTH,
+//				TennisAction.POSSIBLE_ACTIONS);
 		
 		agent.initialize();
 	}

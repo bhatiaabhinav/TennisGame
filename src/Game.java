@@ -6,7 +6,7 @@ import ai.learning.reinforcement.DTdLambdaN.*;
 
 public class Game {
 	public AIPlayer player1;
-	public AIPlayer player2;
+	public Player player2;
 	public Court court;
 	public Ball ball;
 	public Player hitter;
@@ -37,8 +37,9 @@ public class Game {
 		court = new Court();
 		ball = new Ball();
 		player1 = new AIPlayer();
-		player2 = new AIPlayer();
-		((DTdLambdaNAgent)player2.ai.agent).Q = ((DTdLambdaNAgent)player1.ai.agent).Q;
+		player2 = new SimpleAIPlayer();
+		//((DTdLambdaNAgent)player2.ai.agent).Q = ((DTdLambdaNAgent)player1.ai.agent).Q;
+		//((DQNAgent)player2.ai.agent).Q = ((DQNAgent)player1.ai.agent).Q;
 		player1.ball = player2.ball = ball;
 		player1.court = player2.court = court;
 		player1.courtSide = 1;
@@ -53,7 +54,7 @@ public class Game {
 		ball.z = court.netHeight + 1;
 		ball.vz = ball.vx = 0;
 
-		if (random.nextDouble() > 0.0) {
+		if (random.nextDouble() > 0.5) {
 			hitter = player2;
 			receiver = player1;
 			ball.vy = -42;
@@ -136,46 +137,17 @@ public class Game {
 
 				movePlayer(hitter, hitterDecision, dt);
 
-				if (receiver.ballReachingSoon()) {
-
-					receiver.reinforceShotSelection(
-							receiverDecision.xInput.getValue(),
-							receiverDecision.yInput.getValue(), dt);
-					if (receiverDecision.shotInput == ShotInput.PRESSED) {
-						receiver.reinforceShotIntensity(dt);
-					}
-
-					double eta = Math.abs((receiver.y - ball.y)
-							/ (ball.vy - receiver.vy));
-					double expectedX = ball.x + ball.vx * eta;
-					double expectedY = ball.y + ball.vy * eta;
-					movePlayerTowards(receiver, expectedX, expectedY, dt);
-
+				boolean playShot = receiver.ballWithinReach() && receiverDecision.shotInput == ShotInput.PRESSED;
+				
+				if (playShot) {
+					receiver.hitBall(receiverDecision);
+					Player temp = receiver;
+					receiver = hitter;
+					hitter = temp;
+					nBounce = 0;
+					rallyLength++;
 				} else {
-					receiver.resetShotSelectionAndIntensity();
 					movePlayer(receiver, receiverDecision, dt);
-				}
-
-				if (receiver.ballWithinReach()) {
-					boolean playShot = false;
-					if (Math.abs(receiver.y - ball.y) < 1) {
-						// lets play the shot now
-						playShot = true;
-					} else if (nBounce == 1 && ball.vz < 0 && ball.z < 1) {
-						// Stretch forward only if the ball is about to second
-						// bounce. Else allow the ball to get more comfortably
-						// closer
-						playShot = true;
-					}
-
-					if (playShot) {
-						receiver.hitBall();
-						Player temp = receiver;
-						receiver = hitter;
-						hitter = temp;
-						nBounce = 0;
-						rallyLength++;
-					}
 				}
 
 			}
@@ -188,16 +160,6 @@ public class Game {
 //			} catch (InterruptedException e) {
 //				// TODO Auto-generated catch block
 //				e.printStackTrace();
-//			}
-			
-//			if (frameNumber % equalizePlayersFrequency == 0) {
-//				if (player1 instanceof AIPlayer && player2 instanceof AIPlayer) {
-//					if (((AIPlayer)player1).ai.agent.averageBestActionQ > ((AIPlayer)player2).ai.agent.averageBestActionQ) {
-//						((AIPlayer)player1).ai.agent.Q.copyTo(((AIPlayer)player2).ai.agent.Q);
-//					} else {
-//						((AIPlayer)player2).ai.agent.Q.copyTo(((AIPlayer)player1).ai.agent.Q);
-//					}
-//				}
 //			}
 			
 			frameNumber++;

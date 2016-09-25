@@ -88,9 +88,13 @@ public abstract class Player {
     	return Math.abs(ball.y - y) < yReach && Math.abs(ball.x - x) < xReach && ball.z < zReach;
     }
     
-    public final void hitBall() {
+    public final void hitBall(TennisAction decision) {
     	double targetX;
     	double targetY;
+    	
+    	shotSelectionX = decision.xInput.value * 0.5;
+    	shotSelectionY = decision.yInput.value * 0.5;
+    	shotIntensity = 0.1;
     	
     	if (courtSide == 1) {
     		targetX = ((shotSelectionX + 1) / 2) * court.width;
